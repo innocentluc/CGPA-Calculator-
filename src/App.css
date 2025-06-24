@@ -1,38 +1,151 @@
-.App {
-  text-align: center;
+/* src/App.css */
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #f4f6f8;
+  color: #333;
+  margin: 0;
+  padding: 0;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.container {
+  max-width: 800px;
+  margin: auto;
+  padding: 40px 20px;
+  background: #fff;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  margin-top: 40px;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+h1, h2, h3 {
+  color: #2c3e50;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
+select, input, button {
+  font-size: 16px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  outline: none;
+}
+
+select:focus, input:focus {
+  border-color: #3498db;
+  box-shadow: 0 0 3px rgba(52, 152, 219, 0.5);
+}
+
+button {
+  background-color: #3498db;
   color: white;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s ease;
 }
 
-.App-link {
-  color: #61dafb;
+button:hover {
+  background-color: #2980b9;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
+button.delete {
+  background-color: #e74c3c;
+}
+
+button.delete:hover {
+  background-color: #c0392b;
+}
+
+.semester-item {
+  padding: 12px;
+  border-bottom: 1px solid #eee;
+}
+
+.semester-name {
+  font-weight: bold;
+  color: #34495e;
+}
+
+.flex {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+label {
+  font-weight: bold;
+}
+
+input[type="text"], input[type="number"], select {
+  width: 100%;
+  max-width: 200px;
+}
+
+@media (max-width: 600px) {
+  .flex {
+    flex-direction: column;
   }
-  to {
-    transform: rotate(360deg);
+
+  input, select {
+    max-width: 100%;
   }
+}
+
+/* Theme Wrapper */
+.app.light {
+  background-color: #f4f6f8;
+  color: #333;
+}
+
+.app.dark {
+  background-color: #121212;
+  color: #f2f2f2;
+}
+
+.app.dark .container {
+  background-color: #1e1e1e;
+  color: #f2f2f2;
+}
+
+.app.dark select,
+.app.dark input,
+.app.dark button {
+  background-color: #2a2a2a;
+  color: #fff;
+  border-color: #555;
+}
+
+.app.dark input:focus,
+.app.dark select:focus {
+  border-color: #888;
+  box-shadow: 0 0 4px #888;
+}
+
+.app.dark button:hover {
+  background-color: #444;
+}
+
+.app.dark button.delete {
+  background-color: #c0392b;
+}
+
+.app.dark button.delete:hover {
+  background-color: #992d22;
+}
+
+.theme-toggle {
+  float: right;
+  margin-bottom: 20px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 14px;
+  border: none;
+  background-color: #ddd;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.app.dark .theme-toggle {
+  background-color: #333;
+  color: #fff;
 }
