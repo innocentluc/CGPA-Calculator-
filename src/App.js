@@ -1,9 +1,8 @@
-// src/App.js
-
 import React, { useState, useEffect } from 'react';
 import SemesterForm from './components/SemesterForm';
+import ConfirmModal from './components/ConfirmModal';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable'; // ✅ no need to call anything
+import 'jspdf-autotable';
 import './App.css';
 
 function App() {
@@ -13,6 +12,15 @@ function App() {
   });
   const [scale, setScale] = useState('5');
   const [theme, setTheme] = useState('light');
+  const [editingIndex, setEditingIndex] = useState(null);
+  // New states for user and institution name
+  const [userName, setUserName] = useState('');
+  const [institutionName, setInstitutionName] = useState('');
+
+  // Modal states
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [deleteType, setDeleteType] = useState(null); // "single" or "all"
+  const [semesterToDelete, setSemesterToDelete] = useState(null);
 
   const toggleTheme = () => {
     setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
@@ -26,11 +34,28 @@ function App() {
     setSemesters(prev => [...prev, { name, gpa, totalUnits, courses }]);
   };
 
-  const resetSemesters = () => {
-    if (window.confirm("Are you sure you want to delete all semesters?")) {
+  const updateSemester = (index, name, gpa, totalUnits, courses) => {
+    const updated = [...semesters];
+    updated[index] = { name, gpa, totalUnits, courses };
+    setSemesters(updated);
+    setEditingIndex(null);
+  };
+
+  const openDeleteModal = (type, index = null) => {
+    setDeleteType(type);
+    setSemesterToDelete(index);
+    setIsModalOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (deleteType === "single" && semesterToDelete !== null) {
+      setSemesters(prev => prev.filter((_, i) => i !== semesterToDelete));
+    }
+    if (deleteType === "all") {
       setSemesters([]);
       localStorage.removeItem('cgpa_semesters');
     }
+    setIsModalOpen(false);
   };
 
   const calculateCGPA = () => {
@@ -52,7 +77,6 @@ function App() {
       if (gpa >= 1.5) return "Third Class";
       return "Pass / Fail";
     }
-
     if (scale === '4') {
       if (gpa >= 3.7) return "First Class";
       if (gpa >= 3.0) return "Second Class Upper";
@@ -60,7 +84,6 @@ function App() {
       if (gpa >= 1.0) return "Third Class";
       return "Pass / Fail";
     }
-
     if (scale === 'luc') {
       if (gpa > 3.80) return "Exceptionally High Distinction";
       if (gpa >= 3.67) return "Distinction";
@@ -69,15 +92,17 @@ function App() {
       if (gpa >= 1.88) return "Remedial";
       return "Fail";
     }
-
     return "-";
   };
 
   const exportPDF = () => {
     const doc = new jsPDF();
     doc.setFontSize(16);
-    doc.text("🎓 CGPA Report", 14, 15);
-    let yOffset = 25;
+    doc.text("CGPA Report", 14, 15);
+    // Add user and institution name
+    doc.setFontSize(12);
+    doc.text(`Name: ${userName || '-'}\nInstitution: ${institutionName || '-'}`, 14, 23);
+    let yOffset = 35;
 
     semesters.forEach((sem, idx) => {
       doc.setFontSize(14);
@@ -120,7 +145,31 @@ function App() {
           {theme === 'light' ? '🌙 Dark Mode' : '☀️ Light Mode'}
         </button>
 
-        <h1>🎓 CGPA Calculator</h1>
+        <h1>🎓GRADELY</h1>
+
+        {/* User and Institution Name Inputs */}
+        <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+          <div>
+            <label><strong>Your Name:</strong></label><br />
+            <input
+              type="text"
+              value={userName}
+              onChange={e => setUserName(e.target.value)}
+              placeholder="Enter your name"
+              style={{ width: '200px' }}
+            />
+          </div>
+          <div>
+            <label><strong>Institution Name:</strong></label><br />
+            <input
+              type="text"
+              value={institutionName}
+              onChange={e => setInstitutionName(e.target.value)}
+              placeholder="Enter institution name"
+              style={{ width: '250px' }}
+            />
+          </div>
+        </div>
 
         <div style={{ marginBottom: '20px' }}>
           <label><strong>Choose Grading Scale:</strong> </label>
@@ -131,9 +180,15 @@ function App() {
           </select>
         </div>
 
-        <SemesterForm onGpaCalculated={addSemester} scale={scale} />
+        <SemesterForm
+          onGpaCalculated={addSemester}
+          onGpaUpdated={updateSemester}
+          scale={scale}
+          editingSemester={editingIndex !== null ? semesters[editingIndex] : null}
+          editingIndex={editingIndex}
+        />
 
-        <h2>📘 All Semesters:</h2>
+        <h2>All Semesters:</h2>
         {semesters.length === 0 ? (
           <p>No semesters added yet.</p>
         ) : (
@@ -141,6 +196,8 @@ function App() {
             {semesters.map((sem, index) => (
               <li key={index}>
                 <strong>{sem.name || `Semester ${index + 1}`}</strong> – GPA: <strong>{sem.gpa}</strong> | Units: {sem.totalUnits}
+                <button style={{ marginLeft: '10px' }} onClick={() => setEditingIndex(index)}>✏️ Edit</button>
+                <button style={{ marginLeft: '5px', color: 'red' }} onClick={() => openDeleteModal("single", index)}>🗑 Delete</button>
               </li>
             ))}
           </ol>
@@ -148,15 +205,24 @@ function App() {
 
         {semesters.length > 0 && (
           <div style={{ marginTop: '20px' }}>
-            <h2>✅ CGPA: {cgpa}</h2>
-            <h3>📊 Classification: {classification}</h3>
-            <button onClick={resetSemesters} className="delete" style={{ marginRight: '10px' }}>
+            <h2>CGPA: {cgpa}</h2>
+            <h3>Classification: {classification}</h3>
+            <button onClick={() => openDeleteModal("all")} className="delete" style={{ marginRight: '10px' }}>
               Reset / Delete All Semesters
             </button>
             <button onClick={exportPDF}>Export Report as PDF</button>
           </div>
         )}
       </div>
+
+      {/* ✅ Reusable Confirmation Modal */}
+      <ConfirmModal
+        isOpen={isModalOpen}
+        title="Confirm Delete"
+        message={deleteType === "all" ? "Are you sure you want to delete all semesters?" : "Are you sure you want to delete this semester?"}
+        onConfirm={confirmDelete}
+        onCancel={() => setIsModalOpen(false)}
+      />
     </div>
   );
 }

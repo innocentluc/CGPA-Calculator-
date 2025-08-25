@@ -1,8 +1,7 @@
 // src/components/SemesterForm.js
+import React, { useState, useEffect } from 'react';
 
-import React, { useState } from 'react';
-
-const SemesterForm = ({ onGpaCalculated, scale }) => {
+const SemesterForm = ({ onGpaCalculated, onGpaUpdated, scale, editingSemester, editingIndex }) => {
   const [courses, setCourses] = useState([{ title: '', unit: '', grade: '' }]);
   const [semesterName, setSemesterName] = useState('');
 
@@ -19,6 +18,14 @@ const SemesterForm = ({ onGpaCalculated, scale }) => {
     if (scale === 'luc') return gradePointsLUC;
     return gradePoints4Simple;
   };
+
+  // ✅ Load editing semester data
+  useEffect(() => {
+    if (editingSemester) {
+      setSemesterName(editingSemester.name);
+      setCourses(editingSemester.courses);
+    }
+  }, [editingSemester]);
 
   const handleChange = (index, field, value) => {
     const newCourses = [...courses];
@@ -57,7 +64,11 @@ const SemesterForm = ({ onGpaCalculated, scale }) => {
       grade: c.grade.toUpperCase()
     }));
 
-    onGpaCalculated(semesterName || `Semester ${Math.random()}`, Number(gpa.toFixed(2)), totalUnits, cleanCourses);
+    if (editingIndex !== null) {
+      onGpaUpdated(editingIndex, semesterName || `Semester ${editingIndex + 1}`, Number(gpa.toFixed(2)), totalUnits, cleanCourses);
+    } else {
+      onGpaCalculated(semesterName || `Semester ${Math.random()}`, Number(gpa.toFixed(2)), totalUnits, cleanCourses);
+    }
 
     setCourses([{ title: '', unit: '', grade: '' }]);
     setSemesterName('');
@@ -65,7 +76,7 @@ const SemesterForm = ({ onGpaCalculated, scale }) => {
 
   return (
     <div style={{ marginTop: '20px' }}>
-      <h2>Enter Semester Courses</h2>
+      <h2>{editingIndex !== null ? "Edit Semester" : "Enter Semester Courses"}</h2>
       <input
         type="text"
         placeholder="Semester Name (e.g. 100L First Semester)"
@@ -99,7 +110,9 @@ const SemesterForm = ({ onGpaCalculated, scale }) => {
         </div>
       ))}
       <button onClick={addCourse}>Add Another Course</button>
-      <button onClick={calculateGPA} style={{ marginLeft: '10px' }}>Calculate GPA</button>
+      <button onClick={calculateGPA} style={{ marginLeft: '10px' }}>
+        {editingIndex !== null ? "Update GPA" : "Calculate GPA"}
+      </button>
     </div>
   );
 };
